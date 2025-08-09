@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+  <head>
+    <title>FastAPI Frontend</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      input {
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+      #recommendation-container, #cart-container { 
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+      }
+      .recommendation-item {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .product-details {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+      .product-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FastAPI Recommendation System</h1>
+
+    <form id="recommendationForm">
+      <label for="inputData">Enter your input:</label>
+      <input type="text" id="inputData" name="inputData" required />
+      <button type="submit">Get Recommendations</button>
+    </form>
+    
+    <div id="cart-container"></div>
+    <div id="recommendation-container"></div>
+    <div id="result">Results will appear here...</div>
+
+    <script>
+      document
+        .getElementById("recommendationForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const inputData = document.getElementById("inputData").value;
+          const resultDiv = document.getElementById("result");
+
+          resultDiv.innerHTML = "Loading...";
+
+          try {
+            // Clear containers first
+            document.getElementById("cart-container").innerHTML = '';
+            document.getElementById("recommendation-container").innerHTML = '';
+
+            // Render cart images
+            const cart_response = await fetch(
+              `http://127.0.0.1:8000/get_cart/${encodeURIComponent(inputData)}`,
+            );
+            
+            if(!cart_response.ok) {
+              throw new Error(`HTTP error! status: ${cart_response.status}`);
+            }
+            const cart_data = await cart_response.json();
+            console.log("Cart data:", cart_data);
+
+            const cart_container = document.getElementById("cart-container");
+            
+            // Handle cart data (assuming cart_data.item is an array)
+            if (cart_data.item && Array.isArray(cart_data.item)) {
+              for (let i = 0; i < cart_data.item.length; i++) {
+                const item = cart_data.item[i];
+                console.log("Cart item:", item);
+
+                const img = document.createElement("img");
+                img.src = `assets/${item}.png`;
+                img.className = "recommendation-item"; // Use class instead of ID
+                img.alt = item + " picture";
+                img.style.width = "200px";
+
+                const product_card = document.createElement("div");
+                product_card.className = "product-card";
+
+                const label = document.createElement("a");
+                label.innerHTML = item;
+
+                const product_details = document.createElement("div");
+                product_details.className = "product-details"; // Use class instead of ID
+                product_details.appendChild(label);
+
+                product_card.appendChild(img);
+                product_card.appendChild(product_details);
+                cart_container.appendChild(product_card);
+              }
+            }
+
+            // Render recommendation images
+            const response = await fetch(
+              `http://127.0.0.1:8000/get_recommendations/${encodeURIComponent(inputData)}`,
+            );
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log("Recommendation data:", data);
+
+            const container = document.getElementById("recommendation-container");
+            
+            // Handle recommendation data
+            if (data.recommendations && Array.isArray(data.recommendations)) {
+              for (let i = 0; i < data.recommendations.length; i++) {
+                const item = data.recommendations[i].item;
+                console.log("Recommendation item:", item);
+
+                const img = document.createElement("img");
+                img.src = `assets/${item}.png`;
+                img.className = "recommendation-item"; // Use class instead of ID
+                img.alt = item + " picture";
+                img.style.width = "200px";
+
+                const product_card = document.createElement("div");
+                product_card.className = "product-card";
+
+                const label = document.createElement("a");
+                label.innerHTML = item;
+
+                const product_details = document.createElement("div");
+                product_details.className = "product-details";
+                product_details.appendChild(label);
+
+                product_card.appendChild(img);
+                product_card.appendChild(product_details);
+                container.appendChild(product_card);
+              }
+            }
+
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          } catch (error) {
+            console.error("Error:", error);
+            resultDiv.innerHTML = `Error: ${error.message}`;
+          }
+        });
+    </script>
+  </body>
+</html>

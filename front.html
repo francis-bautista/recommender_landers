@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+  <head>
+    <title>FastAPI Frontend</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      input {
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+      #cart-container { 
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+      }
+      #recommendation-container { 
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+      }
+      #recommendation-item {
+        border : 1px solid #ddd;
+        border-radius : 4px;
+      }
+      #product-details {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FastAPI Recommendation System</h1>
+
+    <form id="recommendationForm">
+      <label for="inputData">Enter your input:</label>
+      <input type="text" id="inputData" name="inputData" required />
+      <button type="submit">Get Recommendations</button>
+    <div id="cart-container"></div>
+    <div id="recommendation-container"></div>
+    <div id="result">Results will appear here...</div>
+    </form>
+
+
+    <script>
+      document
+        .getElementById("recommendationForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const inputData = document.getElementById("inputData").value;
+          const resultDiv = document.getElementById("result");
+
+          resultDiv.innerHTML = "Loading...";
+
+          try {
+            //render cart images
+            const cart_response = await fetch(
+              `http://127.0.0.1:8000/get_cart/${encodeURIComponent(inputData)}`,
+            );
+            if(!cart_response.ok) {
+              throw new Error(`HTTP error! status: ${cart_response.status}`);
+            }
+            const cart_data = await cart_response.json();
+            console.log(cart_data.items.length);
+
+            const cart_container = document.getElementById("cart-container");
+
+            cart_container.innerHTML = ''
+            for (let i = 0; i < cart_data.items.length; i++) {
+              const item = cart_data.items[i];
+              const img = document.createElement("img");
+              img.src = `assets/${item}.png`; // or .png, adjust extension as needed
+              img.id = "recommendation-item"
+              img.alt = item + " picture";
+              img.style.width = "200px"; // Adjust size as needed
+
+              const product_card = document.createElement("div");
+              product_card.className = "product-card"
+
+              const label = document.createElement("a");
+              label.innerHTML = item;
+
+              const product_details = document.createElement("div");
+              product_details.id = "product-details";
+              product_details.appendChild(label);
+
+              product_card.appendChild(img);
+              product_card.appendChild(product_details);
+              // Add the images
+              cart_container.appendChild(product_card);
+              
+              console.log(item);
+            }
+
+            //render recommendation images
+            const response = await fetch(
+              `http://127.0.0.1:8000/get_recommendations/${encodeURIComponent(inputData)}`,
+            );
+
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            for (let i = 0; i < data.recommendations.length; i++) {
+              console.log(data.recommendations[i].item);
+            }
+            // make container for recomendation pictures
+            const container = document.getElementById(
+              "recommendation-container",
+            );
+            // reset the image container
+            container.innerHTML = ''
+
+            // Loop through the Json items
+            for (let i = 0; i < data.recommendations.length; i++) {
+              const item = data.recommendations[i].item;
+
+              // Create image element
+              const img = document.createElement("img");
+              console.log(item)
+              // img.src = `assets/${item}.png`; // or .png, adjust extension as needed
+              img.src = `assets/${item}.png`; // or .png, adjust extension as needed
+              img.id = "recommendation-item"
+              img.alt = item + " picture";
+              img.style.width = "200px"; // Adjust size as needed
+
+              const product_card = document.createElement("div");
+              product_card.className = "product-card"
+
+              const label = document.createElement("a");
+              label.innerHTML = item;
+
+              const product_details = document.createElement("div");
+              product_details.id = "product-details";
+              product_details.appendChild(label);
+
+              product_card.appendChild(img);
+              product_card.appendChild(product_details);
+              // Add the images
+              container.appendChild(product_card);
+            }
+
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          } catch (error) {
+            resultDiv.innerHTML = `Error: ${error.message}`;
+          }
+        });
+    </script>
+  </body>
+</html>

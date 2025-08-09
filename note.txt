@@ -1,0 +1,12 @@
+TODO:
+[ ] installing postman
+[ ] get the images using input that is customer-id
+[ ] make the apa
+[ ] make the frontend
+[ ] 
+
+execute in order:
+  gen_trans_list_io_csv_pkl.py
+  gen_rule_set_io_pkl_pkl.py
+  gen_mem_cart_io_csv_json.py
+  gen_pop_item_io_csv_csv.py

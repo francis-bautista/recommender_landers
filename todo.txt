@@ -1,0 +1,5 @@
+[ ] rules_api.py
+  [ ] make the subroutine for getting popular items
+  [ ] make the getting recommendations work with the new data set
+  [ ] change the pckl file with the recommendations from the prem_sales.csv
+  [x] generate customer list with command line arguments
